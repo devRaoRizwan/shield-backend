@@ -4,8 +4,14 @@ from rest_framework import serializers
 from .models import Inquiry, Product
 
 
-class ProductBaseSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(read_only=True)
+class ProductImageUrlMixin:
+    def get_image(self, obj):
+        request = self.context.get("request")
+        return obj.get_image_url(request)
+
+
+class ProductBaseSerializer(ProductImageUrlMixin, serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -35,7 +41,7 @@ class ProductDetailSerializer(ProductBaseSerializer):
 
 
 class ProductWriteSerializer(ProductBaseSerializer):
-    image = serializers.ImageField(required=False, allow_null=True)
+    image = serializers.ImageField(required=False, allow_null=True, write_only=True)
 
     class Meta(ProductBaseSerializer.Meta):
         fields = (
@@ -49,6 +55,11 @@ class ProductWriteSerializer(ProductBaseSerializer):
             "is_active",
             "sort_order",
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["image"] = self.get_image(instance)
+        return data
 
 
 class AdminLoginSerializer(serializers.Serializer):

@@ -9,6 +9,7 @@ from .views import (
     AdminProfileAPIView,
     InquiryCreateAPIView,
     ProductDetailAPIView,
+    ProductImageAPIView,
     ProductListAPIView,
 )
 
@@ -17,6 +18,7 @@ app_name = "catalog"
 urlpatterns = [
     path("products/", ProductListAPIView.as_view(), name="product-list"),
     path("products/<slug:slug>/", ProductDetailAPIView.as_view(), name="product-detail"),
+    path("products/<slug:slug>/image/", ProductImageAPIView.as_view(), name="product-image"),
     path("inquiries/", InquiryCreateAPIView.as_view(), name="inquiry-create"),
     path("admin/auth/login/", AdminLoginAPIView.as_view(), name="admin-login"),
     path("admin/auth/me/", AdminProfileAPIView.as_view(), name="admin-profile"),

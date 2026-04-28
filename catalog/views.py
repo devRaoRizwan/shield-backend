@@ -1,3 +1,4 @@
+from django.http import Http404, HttpResponse
 from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -30,6 +31,20 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Product.objects.active()
+
+
+class ProductImageAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        product = Product.objects.filter(slug=slug).first()
+        if not product or not product.image_data:
+            raise Http404("Image not found.")
+
+        response = HttpResponse(product.image_data, content_type=product.image_content_type or "application/octet-stream")
+        if product.image_name:
+            response["Content-Disposition"] = f'inline; filename="{product.image_name}"'
+        return response
 
 
 class AdminLoginAPIView(APIView):

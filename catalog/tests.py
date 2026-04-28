@@ -62,7 +62,21 @@ class ProductAPITests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["slug"], self.product.slug)
-        self.assertIn("/media/products/", response.json()["image"])
+        self.assertTrue(response.json()["image"].endswith(f"/api/products/{self.product.slug}/image/"))
+
+    def test_product_image_file_is_saved_to_storage(self):
+        self.assertEqual(self.product.image_name, "product.gif")
+        self.assertTrue(bool(self.product.image_data))
+        self.assertFalse(self.product.image)
+
+    def test_product_image_endpoint_returns_database_image(self):
+        response = self.client.get(
+            reverse("catalog:product-image", kwargs={"slug": self.product.slug})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/gif")
+        self.assertEqual(response.content, TEST_IMAGE_BYTES)
 
     def test_product_detail_returns_404_for_invalid_slug(self):
         response = self.client.get(
@@ -145,6 +159,10 @@ class AdminProductAPITests(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Product.objects.filter(slug="fresh-product").exists())
+        product = Product.objects.get(slug="fresh-product")
+        self.assertEqual(product.image_name, "fresh.gif")
+        self.assertTrue(bool(product.image_data))
+        self.assertFalse(product.image)
 
     def test_admin_can_update_product(self):
         response = self.client.patch(
