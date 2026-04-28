@@ -20,7 +20,7 @@ build/
 
 # Django-specific
 db.sqlite3
-staticfiles/
+# staticfiles/  # Uncommenting: static files should be committed for production
 media/
 *.log
 local_settings.py
