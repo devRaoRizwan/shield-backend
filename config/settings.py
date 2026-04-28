@@ -71,23 +71,26 @@ WSGI_APPLICATION = 'config.wsgi.application'
 if os.getenv('DATABASE_URL'):
     # Production: Use Supabase via dj-database-url
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
-            conn_max_age=600,
-        )
-    }
+    'default': dj_database_url.parse(
+        os.environ.get("DATABASE_URL"),
+        conn_max_age=600
+    )
+}
 else:
     # Development: Use local PostgreSQL
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'shieldbackend'),
-            'USER': os.getenv('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
-            'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
-            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'db.uuzszllpkmbjhwgmdyky.supabase.co',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
         }
     }
+}
 
 
 # Password validation
