@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/', include('catalog.urls')),
 ]
 
-# Serve static and media files in both development and production
+# Static files are collected for WhiteNoise, and media is served by Django here
+# so uploaded product images remain reachable on the Render deployment.
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
