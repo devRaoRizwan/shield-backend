@@ -55,6 +55,29 @@ class ProductAPITests(TestCase):
         self.assertEqual(len(response.json()), 1)
         self.assertEqual(response.json()[0]["slug"], self.product.slug)
 
+    def test_product_list_orders_numeric_slugs_numerically(self):
+        self.product.slug = "10"
+        self.product.save(update_fields=["slug"])
+        Product.objects.create(
+            name="Earlier Numeric Product",
+            slug="02",
+            image=SimpleUploadedFile(
+                "numeric.gif",
+                TEST_IMAGE_BYTES,
+                content_type="image/gif",
+            ),
+            description="Should sort before 10",
+            details="Numeric slug ordering",
+            customization_option="None",
+            is_active=True,
+            sort_order=99,
+        )
+
+        response = self.client.get(reverse("catalog:product-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["slug"] for item in response.json()], ["02", "10"])
+
     def test_product_detail_uses_slug_lookup(self):
         response = self.client.get(
             reverse("catalog:product-detail", kwargs={"slug": self.product.slug})
@@ -163,6 +186,32 @@ class AdminProductAPITests(TestCase):
         self.assertEqual(product.image_name, "fresh.gif")
         self.assertTrue(bool(product.image_data))
         self.assertFalse(product.image)
+
+    def test_admin_product_list_orders_numeric_slugs_numerically(self):
+        self.product.slug = "10"
+        self.product.save(update_fields=["slug"])
+        Product.objects.create(
+            name="Earlier Admin Product",
+            slug="02",
+            image=SimpleUploadedFile(
+                "earlier-admin.gif",
+                TEST_IMAGE_BYTES,
+                content_type="image/gif",
+            ),
+            description="Should sort before 10",
+            details="Numeric admin ordering",
+            customization_option="Silver plate",
+            is_active=True,
+            sort_order=999,
+        )
+
+        response = self.client.get(
+            reverse("catalog:admin-product-list"),
+            **self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["slug"] for item in response.json()[:2]], ["02", "10"])
 
     def test_admin_can_update_product(self):
         response = self.client.patch(

@@ -18,11 +18,28 @@ from .serializers import (
 )
 
 
-class ProductListAPIView(generics.ListAPIView):
+class NumericSlugOrderingMixin:
+    @staticmethod
+    def _slug_sort_key(product):
+        slug = (product.slug or "").strip()
+        if slug.isdigit():
+            return (0, int(slug), slug)
+        return (1, slug)
+
+    def get_sorted_products(self, queryset):
+        return sorted(queryset, key=self._slug_sort_key)
+
+
+class ProductListAPIView(NumericSlugOrderingMixin, generics.ListAPIView):
     serializer_class = ProductListSerializer
 
     def get_queryset(self):
         return Product.objects.active()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(self.get_sorted_products(queryset), many=True)
+        return Response(serializer.data)
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
@@ -85,13 +102,18 @@ class AdminProfileAPIView(APIView):
         )
 
 
-class AdminProductListCreateAPIView(generics.ListCreateAPIView):
+class AdminProductListCreateAPIView(NumericSlugOrderingMixin, generics.ListCreateAPIView):
     serializer_class = ProductWriteSerializer
     permission_classes = [IsStaffUser]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        return Product.objects.all().order_by("sort_order", "name")
+        return Product.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(self.get_sorted_products(queryset), many=True)
+        return Response(serializer.data)
 
 
 class AdminProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
